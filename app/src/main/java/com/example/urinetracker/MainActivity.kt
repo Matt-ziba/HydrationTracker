@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
 fun bottomBar(name: String, modifier: Modifier = Modifier) {
     var showHydrationTracking by  remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
+    val iconSize = configuration.screenWidthDp.dp * 0.3f
     Box(modifier = Modifier
         .fillMaxSize()
         .background(dark)
@@ -78,72 +79,58 @@ fun bottomBar(name: String, modifier: Modifier = Modifier) {
         .height(75.dp)
         .fillMaxWidth()
         .background(darker))
-    Box(modifier = Modifier
+    Row (modifier = Modifier.fillMaxSize()
         .offset(x = 0.dp, y = (configuration.screenHeightDp.dp - 100.dp))
         .background(darker)
         .width(configuration.screenWidthDp.dp)
-        .height(100.dp)
-    ) {
-        Row (modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.size(75.dp)
-                .fillMaxHeight()
-                .offset(x = 35.dp, y = 10.dp)
-                .clickable {
-                    if(!showHydrationTracking) {
-                        showHydrationTracking = true
-                    } else {
-                        showHydrationTracking = false
-                    }
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_glass_black),
-                    contentDescription = "Glass icon",
-                    modifier = modifier
-                        .fillMaxSize(),
-                    tint = light
-                )
-            }
-            Box(modifier = Modifier.size(75.dp)
-                .fillMaxHeight()
-                .offset(x = configuration.screenWidthDp.dp - 185.dp, y = 10.dp)) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_calendar_black),
-                    contentDescription = "Calendar icon",
-                    modifier = modifier
-                        .fillMaxSize(),
-                    tint = light
-                )
-            }
-            Box(modifier = Modifier.size(75.dp)
-                .fillMaxHeight()
-                .offset(x = 10.dp, y = 10.dp)
+        .height(100.dp)) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_glass_black),
+            contentDescription = "Glass icon",
+            modifier = modifier
+                .size(75.dp)
+                .offset(x = 35.dp, y = -25.dp)
                 .clickable {
                     if (!showHydrationTracking) {
                         showHydrationTracking = true
                     } else {
                         showHydrationTracking = false
                     }
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_camera_black),
-                    contentDescription = "Camera icon",
-                    modifier = modifier
-                        .fillMaxSize(),
-                    tint = light
-                )
-            }
-        }
-
+                },
+            tint = light
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_calendar_black),
+            contentDescription = "Calendar icon",
+            modifier = modifier
+                .size(75.dp)
+                .offset(x = configuration.screenWidthDp.dp - 185.dp, y = -25.dp),
+            tint = light
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_camera_black),
+            contentDescription = "Camera icon",
+            modifier = modifier
+                .size(75.dp)
+                .offset(x = 10.dp, y = -25.dp)
+                .clickable {
+                    if (!showHydrationTracking) {
+                        showHydrationTracking = true
+                    } else {
+                        showHydrationTracking = false
+                    }
+                },
+            tint = light
+        )
     }
     if (showHydrationTracking) {
-        HydrationTracking()
+        HydrationTracking(500)
     }
 }
 @Composable
-fun HydrationTracking() {
-    var boxColor by remember { mutableStateOf(Color.Gray) }
+fun HydrationTracking(waterVal: Int) {
+    var showHydrationTracking by  remember { mutableStateOf(false) }
+    var niggaVar by remember { mutableStateOf(waterVal) }
     val configuration = LocalConfiguration.current
     Text(text = "Hydration",
         style = TextStyle(
@@ -161,6 +148,23 @@ fun HydrationTracking() {
         .fillMaxSize()
         .wrapContentSize(Alignment.Center)
     ) {
+        Box(modifier = Modifier
+            .align(Alignment.Center)
+            .fillMaxSize()
+            .wrapContentSize(Alignment.Center)
+            .offset(x = 0.dp, y = 110.dp)
+            .clip(RoundedCornerShape(15.dp))
+            .background(darker)) {
+            Text(
+                text = waterVal.toString(), modifier = Modifier
+                    .padding(20.dp),
+                style = TextStyle(
+                    fontFamily = FontFamily(Font(R.font.roboto)),
+                    fontSize = 65.sp,
+                    fontWeight = FontWeight.Bold
+                ), color = light
+            )
+        }
         Box(modifier = Modifier
             .height(75.dp)
             .width(200.dp)
@@ -193,7 +197,8 @@ fun HydrationTracking() {
                 .align(Alignment.Center)
                 .offset(x = 135.dp, y = 110.dp)
                 .clickable {
-
+                    showHydrationTracking = true
+                    niggaVar = waterVal + 50
                 },
             tint = light)
         Icon(painter = painterResource(id = R.drawable.ic_minus_black),
@@ -203,7 +208,8 @@ fun HydrationTracking() {
                 .size(75.dp)
                 .align(Alignment.Center)
                 .offset(x = -135.dp, y = 110.dp)
-                .clickable {  },
+                .clickable {showHydrationTracking = true
+                           niggaVar = waterVal - 50},
             tint = light)
         Icon(
             painter = painterResource(id = R.drawable.ic_glass_black),
@@ -214,6 +220,13 @@ fun HydrationTracking() {
             tint = light
         )
     }
+    if (showHydrationTracking) {
+        HydrationTracking(niggaVar)
+    }
+    if(niggaVar < 0) {
+        HydrationTracking(50)
+        HydrationTracking(0)
+    }
 }
 
 @Preview(showBackground = true)
@@ -221,7 +234,7 @@ fun HydrationTracking() {
 fun GreetingPreview() {
     UrineTrackerTheme {
         bottomBar("Nigga")
-        HydrationTracking()
+        HydrationTracking(500)
     }
 }
 
