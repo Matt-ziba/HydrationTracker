@@ -1,52 +1,47 @@
-package com.example.urinetracker
+package com.example.room_test
 
-import android.content.Context
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Entity(tableName = "hydration_logs")
-data class HydrationLog(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val timestamp: Long,
-    val amount: Int
+@Entity
+data class Vals(
+    @PrimaryKey val uid: Int,
+    @ColumnInfo(name = "year") val year: Int,
+    @ColumnInfo(name = "month") val month: Int,
+    @ColumnInfo(name = "day") val day: Int,
+    @ColumnInfo(name = "hour") val hour: Int,
+    @ColumnInfo(name = "minute") val minute: Int,
+    @ColumnInfo(name = "raw_time") val rawTime: Long,
+    @ColumnInfo(name = "water_val") val waterVal: Int
 )
 
 @Dao
-interface HydrationLogDao {
+interface UserDao {
+    @Query("SELECT * FROM vals")
+    fun getAll(): List<Vals>
+
+    @Query("SELECT * FROM vals WHERE uid IN (:userIds)")
+    fun loadAllByIds(userIds: IntArray): List<Vals>
+
+    @Query("SELECT * FROM vals WHERE year LIKE :first AND " +
+            "month LIKE :last LIMIT 1")
+    fun findByName(first: String, last: String): Vals
+
     @Insert
-    suspend fun insertLog(hydrationLog: HydrationLog)
+    fun insertAll(vararg vals: Vals)
 
-    @Query("SELECT * FROM hydration_logs ORDER BY timestamp DESC")
-    suspend fun getAllLogs(): List<HydrationLog>
-
-    @Query("DELETE FROM hydration_logs")
-    suspend fun clearLogs()
+    @Delete
+    fun delete(vals: Vals)
 }
 
-@Database(entities = [HydrationLog::class], version = 1, exportSchema = false)
+@Database(entities = [Vals::class], version = 3)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun hydrationLogDao(): HydrationLogDao
-}
-
-object DatabaseBuilder {
-    private var INSTANCE: AppDatabase? = null
-
-    fun getDatabase(context: Context): AppDatabase {
-        if (INSTANCE == null) {
-            synchronized(AppDatabase::class) {
-                INSTANCE = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "hydration_logs_db"
-                ).build()
-            }
-        }
-        return INSTANCE!!
-    }
+    abstract fun userDao(): UserDao
 }

@@ -16,3 +16,5 @@ val darker = Color(0xFF1d2025)
 val light = Color(0xFFa1a9b7)
 val red = Color(0xFFdc6069)
 val blue = Color(0xFF57a5ed)
+val transparent = Color(0x0FFFFFF)
+
