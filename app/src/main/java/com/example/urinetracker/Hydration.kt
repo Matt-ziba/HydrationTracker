@@ -25,15 +25,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import androidx.room.Room
 import com.example.room_test.AppDatabase
 import com.example.room_test.Vals
+import com.example.urinetracker.ui.theme.UrineTrackerTheme
 import com.example.urinetracker.ui.theme.dark
 import com.example.urinetracker.ui.theme.darker
 import com.example.urinetracker.ui.theme.light
@@ -49,8 +55,6 @@ fun Test(modifier: Modifier = Modifier, waterValI: Int, db: AppDatabase, uid: In
     var valsList by remember { mutableStateOf<List<Vals>>(emptyList()) }
     var save by remember { mutableStateOf(false) }
     var dataread by remember { mutableStateOf(false) }
-    var datadelete by remember { mutableStateOf(false) }
-    var recall by remember { mutableStateOf(false) }
     var waterVal by  remember { mutableIntStateOf(waterValI) }
     var showHydrationTracking by  remember { mutableStateOf(false) }
 
@@ -61,12 +65,12 @@ fun Test(modifier: Modifier = Modifier, waterValI: Int, db: AppDatabase, uid: In
                 if(valsList.isNotEmpty()) {
                     userDao.insertAll(
                         Vals(valsList.last().uid + 1, calendar.get(Calendar.YEAR), calendar.get(
-                            Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(
+                            Calendar.MONTH), calendar.get(Calendar.WEEK_OF_YEAR), calendar.get(Calendar.DAY_OF_MONTH), calendar.get(
                             Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), System.nanoTime(), waterVal)
                     )
                 } else {
                     userDao.insertAll(
-                        Vals(0, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(
+                        Vals(0, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.WEEK_OF_YEAR), calendar.get(
                             Calendar.DAY_OF_MONTH), calendar.get(Calendar.HOUR_OF_DAY), calendar.get(
                             Calendar.MINUTE), System.nanoTime(), waterVal)
                     )
@@ -82,7 +86,7 @@ fun Test(modifier: Modifier = Modifier, waterValI: Int, db: AppDatabase, uid: In
             }
             if (valsList.isNotEmpty()) {
                 valsList.forEach {
-                    Log.v("DatabaseLog", "UID: ${it.uid}, Year: ${it.year}, Month: ${it.month}, Day: ${it.day}, Hour: ${it.hour}, Minute: ${it.minute}, RawTime: ${it.rawTime}, WaterVal: ${it.waterVal}")
+                    Log.v("DatabaseLog", "UID: ${it.uid}, Year: ${it.year}, Month: ${it.month}, Week: ${it.week}, Day: ${it.day}, Hour: ${it.hour}, Minute: ${it.minute}, RawTime: ${it.rawTime}, WaterVal: ${it.waterVal}")
                     val emptyList = listOf<Vals>()
                     valsList = emptyList
                 }
@@ -91,17 +95,19 @@ fun Test(modifier: Modifier = Modifier, waterValI: Int, db: AppDatabase, uid: In
         }
     }
 
-    Text(text = "Hydration",
+    Text(text = "HYDRATION TRACKER",
         style = TextStyle(
             fontSize = 35.sp,
             fontFamily = FontFamily(Font(R.font.roboto)),
-            fontWeight = FontWeight.Normal
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center
         ),
         color = light,
         modifier = Modifier
-            .offset(x = 10.dp, y = 25.dp)
+            .offset(x = 0.dp, y = 25.dp)
             .height(100.dp)
             .fillMaxWidth()
+            .zIndex(4f)
     )
     Box(modifier = Modifier
         .fillMaxSize()
@@ -188,5 +194,19 @@ fun Test(modifier: Modifier = Modifier, waterValI: Int, db: AppDatabase, uid: In
     if(waterVal < 0) {
         Test(modifier, 50, db, uid)
         Test(modifier, 0, db, uid)
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun HydrationPreview() {
+    val db = Room.databaseBuilder(
+        LocalContext.current,
+        AppDatabase::class.java, "database-name"
+    ).fallbackToDestructiveMigration()
+        .build()
+    UrineTrackerTheme {
+        Test(Modifier, 500, db, 0)
     }
 }

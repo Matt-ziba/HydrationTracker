@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +41,8 @@ import com.example.urinetracker.ui.theme.light
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+
+var showCalendar: MutableState<Boolean> = mutableStateOf(false)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,8 +68,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun BottomBar(modifier: Modifier = Modifier, db: AppDatabase) {
-    var showHydrationTracking by  remember { mutableStateOf(false) }
-    var showCalendar by remember { mutableStateOf(false) }
+    var showHydrationTracking by  remember { mutableStateOf(true) }
+    var calendarEnabled by  remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     configuration.screenWidthDp.dp * 0.3f
 
@@ -91,10 +93,11 @@ fun BottomBar(modifier: Modifier = Modifier, db: AppDatabase) {
             contentDescription = "Glass icon",
             modifier = modifier
                 .size(75.dp)
-                .offset(x = 35.dp, y = -25.dp)
+                .offset(x = 50.dp, y = -25.dp)
                 .clickable {
-                    showHydrationTracking = !showHydrationTracking
-                    showCalendar = false
+                    showHydrationTracking = true
+                    showCalendar.value = false
+                    calendarEnabled = false
                 },
             tint = light
         )
@@ -103,35 +106,42 @@ fun BottomBar(modifier: Modifier = Modifier, db: AppDatabase) {
             contentDescription = "Calendar icon",
             modifier = modifier
                 .size(75.dp)
-                .offset(x = configuration.screenWidthDp.dp - 185.dp, y = -25.dp)
+                .offset(x = configuration.screenWidthDp.dp - 200.dp, y = -25.dp)
                 .clickable {
-                    showHydrationTracking = false
-                    showCalendar = !showCalendar
+                    if (!showCalendar.value) {
+                        showCalendar.value = true
+                        calendarEnabled = true
+                        showHydrationTracking = false
+                    } else {
+                        showCalendar.value = false
+                        calendarEnabled = false
+                        showHydrationTracking = true
+                    }
                 },
             tint = light
         )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_camera_black),
-            contentDescription = "Camera icon",
-            modifier = modifier
-                .size(75.dp)
-                .offset(x = 10.dp, y = -25.dp),
-            tint = light
-        )
+//        Icon(
+//            painter = painterResource(id = R.drawable.ic_camera_black),
+//            contentDescription = "Camera icon",
+//            modifier = modifier
+//                .size(75.dp)
+//                .offset(x = 10.dp, y = -25.dp),
+//            tint = light
+//        )
     }
     if (showHydrationTracking) {
         Test(modifier, 500, db, 0)
     }
-    if (showCalendar) {
-        Log.v("nigga", "turned on")
-        ShowCalendar(db)
+    if (showCalendar.value && calendarEnabled) {
+        Log.v("nigga", showCalendar.toString())
+        CalendarApp(db)
+    } else if(calendarEnabled && !showCalendar.value) {
+        Log.v("nigga", showCalendar.toString())
+        showCalendar.value = true
+        CalendarApp(db)
     }
 }
 
-@Composable
-fun ShowCalendar(db: AppDatabase) {
-    CalendarApp(db)
-}
 
 @Preview(showBackground = true)
 @Composable
@@ -151,8 +161,14 @@ fun GreetingPreview() {
 suspend fun loadData(db: AppDatabase): List<Vals> {
     var valsList: List<Vals>
     val userDao = db.userDao()
-    val calendar = Calendar.getInstance()
     withContext(Dispatchers.IO) {
+        if(sortOrder.value == "alltime") {
+            valsList = userDao.getAll()
+        } else if(sortOrder.value == "today") {
+            valsList = userDao.getValsByDate(Calendar.YEAR, Calendar.MONTH, Calendar.DAY_OF_MONTH)
+        } else if(sortOrder.value == "week") {
+            valsList = userDao.getValsByWeek(Calendar.YEAR, Calendar.WEEK_OF_YEAR)
+        }
         valsList = userDao.getAll()
     }
     if (valsList.isNotEmpty()) {
